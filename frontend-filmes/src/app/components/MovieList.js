@@ -1,42 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import MovieCard from "./MovieCard";
-import styles from "./MovieList.module.css";
+import { useEffect, useState } from 'react';
+import MovieCard from './MovieCard';
+import styles from './MovieList.module.css';
 
-export default function MovieList() {
-    const [filmes, setFilmes] = useState([]);
+const MovieList = () => {
+    const [movies, setMovies] = useState([]);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        async function loadMovies() {
+        const fetchMovies = async () => {
             try {
-                // CORREÇÃO: Sua rota é '/filmes', não '/movies'
-                const response = await fetch("http://localhost:4000/filmes");
+
+                const response = await fetch('http://localhost:4000/filmes');
+
+                if (!response.ok) {
+                    throw new Error('Falha ao conectar com a API');
+                }
+
                 const data = await response.json();
 
-                console.log("Dados recebidos:", data);
+                setMovies(data.filmes || []);
 
-                // CORREÇÃO: Seu controller retorna { filmes: [...] }
-                if (data && Array.isArray(data.filmes)) {
-                    setFilmes(data.filmes);
-                }
             } catch (error) {
-                console.error("Erro ao carregar filmes:", error);
+                console.error('Erro ao buscar filmes:', error);
+                setError('Não foi possível carregar os filmes. Verifique se a API está rodando.');
             }
-        }
+        };
 
-        loadMovies();
+        fetchMovies();
     }, []);
 
+    if (error) return <p className={styles.error}>{error}</p>;
+
     return (
-        <div className={styles.grid}>
-            {filmes.length > 0 ? (
-                filmes.map((filme) => (
-                    <MovieCard key={filme._id} movie={filme} />
+        <div className={styles.movieList}>
+            {movies.length > 0 ? (
+                movies.map((movie) => (
+                    <MovieCard key={movie._id} movie={movie} />
                 ))
             ) : (
-                <p className={styles.empty}>Nenhum filme encontrado.</p>
+                <p>Nenhum filme cadastrado ainda.</p>
             )}
         </div>
     );
-}
+};
+
+export default MovieList;
